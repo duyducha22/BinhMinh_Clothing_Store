@@ -1,0 +1,31 @@
+{
+  "name": "binhminh_clothing_store",
+  "version": "1.0.0",
+  "description": "Website bán quần áo thời trang Binh Minh",
+  "main": "backend/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "server": "nodemon backend/server.js",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "data:import": "node backend/data/seeder.js",
+    "data:destroy": "node backend/data/seeder.js -d"
+  },
+  "keywords": ["clothing", "ecommerce", "mern"],
+  "author": "Ha Duy Duc",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.0",
+    "mongoose-delete": "^1.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1",
+    "nodemon": "^2.0.22"
+  }
+}
