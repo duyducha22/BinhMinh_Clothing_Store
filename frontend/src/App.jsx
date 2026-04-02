@@ -1,16 +1,11 @@
-import React from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-
+// File: App.js
 function App() {
   return (
-    <div style={{ paddingTop: '120px', backgroundColor: '#fff' }}>
+    // Sửa 120px thành 100px
+    <div style={{ paddingTop: '100px', backgroundColor: '#fff' }}> 
       <Header />
       <Home />
       <Footer />
     </div>
   );
 }
-
-export default App;

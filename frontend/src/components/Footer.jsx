@@ -50,9 +50,8 @@ const Footer = () => {
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '15px' }}>THEO DÕI</p>
+          <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '15px' }}></p>
           <div style={{ fontSize: '20px', display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
-            <span>f</span> <span>📸</span> <span>🛍️</span>
           </div>
         </div>
       </div>
