@@ -1,7 +1,10 @@
-// File: App.js
+import React from "react";
+import Header from "./components/Header";
+import Home from "./pages/Home";
+import Footer from "./components/Footer";
+
 function App() {
   return (
-    // Sửa 120px thành 100px
     <div style={{ paddingTop: '100px', backgroundColor: '#fff' }}> 
       <Header />
       <Home />
@@ -9,3 +12,5 @@ function App() {
     </div>
   );
 }
+
+export default App;
