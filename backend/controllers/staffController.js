@@ -6,16 +6,13 @@ import generateToken from "../utils/generateToken.js";
 //@access Private/Admin
 const registerStaff = async (req, res) => {
     const { email, password, name, phone, role, salary } = req.body;
-
     try {
         const staffExists = await Staff.findOne({ email });
         if (staffExists) {
             return res.status(400).json({ message: "Nhân viên này đã tồn tại trên hệ thống" });
         }
-
         // Tự động gán quyền Admin nếu role là 'Admin'
         const isAdmin = role === 'Admin';
-
         // Tạo staff mới với đầy đủ thông số lương và vai trò
         const staff = await Staff.create({
             email,
@@ -26,7 +23,6 @@ const registerStaff = async (req, res) => {
             salary,
             isAdmin
         });
-
         res.status(201).json({
             _id: staff._id,
             name: staff.name,
