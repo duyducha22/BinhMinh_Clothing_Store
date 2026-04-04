@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { addOrderItems, getMyOrders, getOrders, updateOrderToDelivered, getOrderById, updateOrderToCancelled, deleteOrder, updateOrderStatus} from '../controllers/orderController.js';
+import { addOrderItems, getMyOrders, getOrders, getOrderById, deleteOrder, updateOrderStatus} from '../controllers/orderController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 //route cua admin
 router
