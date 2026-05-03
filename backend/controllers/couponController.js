@@ -70,32 +70,26 @@ const deleteCoupon = async (req, res) => {
 // @access  Private
 const validateCoupon = async (req, res) => {
   const { code, cartTotal } = req.body; // Cần cartTotal để kiểm tra điều kiện minPurchase
-
   const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
-
   if (!coupon) {
     res.status(404);
     throw new Error('Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa');
   }
-
   //Kiểm tra hạn sử dụng
   if (new Date() > coupon.expirationDate) {
     res.status(400);
     throw new Error('Mã giảm giá đã hết hạn sử dụng');
   }
-
   //Kiểm tra lượt dùng
   if (coupon.usageCount >= coupon.usageLimit) {
     res.status(400);
     throw new Error('Mã giảm giá đã hết lượt sử dụng');
   }
-
   // Kiểm tra số tiền tối thiểu của đơn hàng
   if (cartTotal < coupon.minPurchaseAmount) {
     res.status(400);
     throw new Error(`Đơn hàng tối thiểu ${coupon.minPurchaseAmount.toLocaleString()}đ mới được áp dụng mã này`);
   }
-
   //Tính toán số tiền được giảm thực tế
   let discountAmount = 0;
   if (coupon.discountType === 'percentage') {
@@ -108,7 +102,6 @@ const validateCoupon = async (req, res) => {
     // Nếu là fixed (giảm tiền mặt thẳng)
     discountAmount = coupon.discountValue;
   }
-
   res.json({
     code: coupon.code,
     discountType: coupon.discountType,

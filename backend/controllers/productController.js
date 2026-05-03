@@ -6,24 +6,19 @@ import Order from '../models/orderModel.js';
 const getProducts = async (req, res) => {
     try {
         const { keyword, category, size, color, gender, minPrice, maxPrice } = req.query;
-
         let query = {};
-
         // tim theo tu khoa (ten san pham)
         if (keyword) {
             query.name = { $regex: keyword, $options: 'i' };
         }
-
         // loc theo danh muc (ao so mi, quan jean....)
         if (category) {
             query.category = category;
         }
-
         // loc theo gioi tinh
         if (gender) {
             query.gender = gender;
         }
-
         // loc theo bien the
         // tim san pham co it nhat 1 bien the theo size/mau/... yeu cau
         if (size || color) {
@@ -31,7 +26,6 @@ const getProducts = async (req, res) => {
             if (size) query.variants.$elemMatch.size = size;
             if (color) query.variants.$elemMatch.color = color;
         }
-
         // loc theo khoang gia
         if (minPrice || maxPrice) {
             query.price = {};

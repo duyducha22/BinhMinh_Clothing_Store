@@ -254,6 +254,19 @@ const updateUser = async (req, res) => {
     }
 };
 
+// @desc    Lấy chi tiết khách hàng (Admin)
+// @route   GET /api/customers/:id
+// @access  Private/Admin
+const getUserById = async (req, res) => {
+  const user = await Customer.findById(req.params.id).select('-password');
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404);
+    throw new Error('Không tìm thấy người dùng');
+  }
+};
+
 export {
     registerCustomer,
     loginCustomer,
@@ -265,4 +278,5 @@ export {
     getCustomers,
     deleteUser,
     updateUser,
+    getUserById
 };

@@ -7,15 +7,12 @@ import Product from '../models/productModel.js';
 // @access  Private
 const addOrderItems = async (req, res) => {
     const { shippingAddress, paymentMethod, totalPrice } = req.body;
-
     const customer = await Customer.findById(req.user._id);
     const cartItems = customer.cart;
-
     if (cartItems && cartItems.length === 0) {
         res.status(400);
         throw new Error('Giỏ hàng trống');
     }
-
     // kiem tra va tru kho truoc khi tao don
     for (const item of cartItems) {
         const product = await Product.findById(item.product);
@@ -23,22 +20,18 @@ const addOrderItems = async (req, res) => {
             res.status(404);
             throw new Error(`Sản phẩm ${item.name} không tồn tại`);
         }
-
         const variant = product.variants.find(
             (v) => v.size === item.size && v.color === item.color
         );
-
         if (!variant || variant.stock < item.quantity) {
             res.status(400);
             throw new Error(`Sản phẩm ${item.name} - ${item.size}/${item.color} không đủ hàng`);
         }
-
         // tru kho bien the va tinh lai tong countInStock
         variant.stock -= item.quantity;
         product.countInStock = product.variants.reduce((acc, v) => acc + v.stock, 0);
         await product.save();
     }
-
     // luu don hang
     const order = new Order({
         orderItems: cartItems.map((item) => ({
@@ -51,13 +44,10 @@ const addOrderItems = async (req, res) => {
         paymentMethod,
         totalPrice,
     });
-
     const createdOrder = await order.save();
-
     // xoa gio hang
     customer.cart = [];
     await customer.save();
-
     res.status(201).json(createdOrder);
 };
 
@@ -67,29 +57,23 @@ const addOrderItems = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     const { status } = req.body; 
     // status: 'Chờ xác nhận', 'Đang xử lý', 'Đang giao', 'Đã giao', 'Đã hủy'
-    
     const order = await Order.findById(req.params.id);
-
     if (order) {
         // neu don hang da huy thi khong cho doi trang thai khac
         if (order.orderStatus === 'Đã hủy') {
             res.status(400);
             throw new Error('Đơn hàng đã hủy không thể cập nhật trạng thái khác');
         }
-
         order.orderStatus = status;
-
         // xu ly logic cho tung trang thai don hang
         switch (status) {
             case 'Đã giao':
                 order.isDelivered = true;
                 order.deliveredAt = Date.now();
                 break;
-
             case 'Đã hủy':
                 order.isCancelled = true;
                 order.cancelledAt = Date.now();
-                
                 // hoan khi huy don
                 for (const item of order.orderItems) {
                     const product = await Product.findById(item.product);
@@ -110,7 +94,6 @@ const updateOrderStatus = async (req, res) => {
                 // cac trang thai khac (dang xu ly/ dang giao) chi cap nhat string orderStatus
                 break;
         }
-
         const updatedOrder = await order.save();
         res.json(updatedOrder);
     } else {
