@@ -11,7 +11,7 @@ const QUAN_HUYEN = {
   'TP. Hồ Chí Minh': ['Quận 1', 'Quận 3', 'Quận 5', 'Bình Thạnh', 'Gò Vấp', 'Tân Bình'],
 };
 
-const CheckoutPage = ({ cartItems = [], totalPrice = 0, navigate, removeFromCart, updateQty, clearCart }) => {
+const CheckoutPage = ({ cartItems = [], totalPrice = 0, navigate, removeFromCart, updateQty, clearCart, addOrder }) => {
   const [form, setForm] = useState({
     name: '', email: '', phone: '', address: '',
     tinh: '', huyen: '', phuong: '', note: '',
@@ -39,6 +39,21 @@ const CheckoutPage = ({ cartItems = [], totalPrice = 0, navigate, removeFromCart
   const handleSubmit = () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
+    // Lưu đơn hàng vào lịch sử
+    if (addOrder) {
+      const now = new Date();
+      addOrder({
+        id: Date.now(),
+        date: now.toLocaleDateString('vi-VN'),
+        total: totalPrice,
+        items: cartItems.reduce((s, i) => s + i.qty, 0),
+        status: 'Chờ xác nhận',
+        products: cartItems.map(i => ({ ...i })),
+        address: form.address + (form.phuong ? ', ' + form.phuong : '') + (form.huyen ? ', ' + form.huyen : '') + (form.tinh ? ', ' + form.tinh : ''),
+        name: form.name,
+        phone: form.phone,
+      });
+    }
     if (clearCart) clearCart();
     setSubmitted(true);
   };

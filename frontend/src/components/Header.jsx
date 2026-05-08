@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
 
 const Header = ({
-  navigate,
-  currentQuery = "",
-  cartItems = [],
-  totalItems = 0,
-  totalPrice = 0,
-  isCartOpen = false,
-  setIsCartOpen,
-  removeFromCart,
-  updateQty,
+  navigate, currentQuery = "",
+  cartItems = [], totalItems = 0, totalPrice = 0,
+  isCartOpen = false, setIsCartOpen,
+  removeFromCart, updateQty,
+  user = null, onLogout,
 }) => {
   const [searchTerm, setSearchTerm] = useState(currentQuery);
-  const [user, setUser] = useState({ name: "Test" });
 
   const menuConfig = [
     { title: "TRANG CHỦ", path: "/", active: true },
@@ -52,7 +47,6 @@ const Header = ({
         { id: 29, name: "M204 Mũ Colorado Since 1977", img: "/images/m204-mu-colorado-since-1977.jpg" },
       ]
     },
-    { title: "THÔNG TIN", path: "" },
   ];
 
   const handleSearch = (e) => {
@@ -130,11 +124,11 @@ const Header = ({
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
           {user ? (
             <div style={{ display: 'flex', gap: '15px' }}>
-              <a href="/account" style={{ textDecoration: 'none', color: 'inherit', fontWeight: '600' }}>👤 {user.name}</a>
-              <span style={{ cursor: 'pointer' }} onClick={() => setUser(null)}>Đăng xuất</span>
+              <span onClick={() => navigate('/account')} style={{ textDecoration: 'none', color: 'inherit', fontWeight: '600', cursor: 'pointer' }}>👤 {user.name}</span>
+              <span style={{ cursor: 'pointer' }} onClick={() => { onLogout && onLogout(); }}>Đăng xuất</span>
             </div>
           ) : (
-            <a href="/login" style={{ textDecoration: 'none', color: 'inherit' }}>👤 Tài khoản</a>
+            <span onClick={() => navigate('/login')} style={{ cursor: 'pointer', color: 'inherit' }}>👤 Tài khoản</span>
           )}
           <span style={{ cursor: 'pointer', fontWeight: totalItems > 0 ? 700 : 400 }} onClick={() => setIsCartOpen(true)}>
             🛍️ Giỏ hàng ({totalItems})

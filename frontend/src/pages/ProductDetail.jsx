@@ -72,9 +72,9 @@ const ProductDetail = ({ productId, navigate, onAddToCart }) => {
   const related = allProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAddToCart = () => {
-    if (onAddToCart) {
-      onAddToCart(product, selectedSize, selectedColor.name, qty);
-    }
+    if (onAddToCart) onAddToCart(product, selectedSize, selectedColor.name, qty);
+    // Nếu user chưa đăng nhập, onAddToCart sẽ tự navigate sang /login
+    // Chỉ set trạng thái added nếu không bị redirect
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
