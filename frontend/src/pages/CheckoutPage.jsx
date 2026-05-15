@@ -16,14 +16,11 @@ const CheckoutPage = ({ cartItems = [], totalPrice = 0, navigate, removeFromCart
     name: '', email: '', phone: '', address: '',
     tinh: '', huyen: '', phuong: '', note: '',
   });
-  const [coupon, setCoupon] = useState('');
-  const [couponApplied, setCouponApplied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const discount = couponApplied ? Math.round(totalPrice * 0.1) : 0;
-  const shipping = totalPrice >= 500000 ? 0 : 30000;
-  const finalTotal = totalPrice - discount + shipping;
+  const shipping   = totalPrice >= 500000 ? 0 : 30000;
+  const finalTotal = totalPrice + shipping;
 
   const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
 
@@ -302,47 +299,20 @@ const CheckoutPage = ({ cartItems = [], totalPrice = 0, navigate, removeFromCart
             )}
           </div>
 
-          {/* Coupon */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-            <input
-              placeholder="Mã giảm giá"
-              value={coupon}
-              onChange={e => setCoupon(e.target.value)}
-              style={{ flex: 1, padding: '10px 12px', border: '1px solid #ddd', fontSize: 12, outline: 'none', borderRadius: 4 }}
-            />
-            <button
-              onClick={() => { if (coupon.trim()) setCouponApplied(true); }}
-              style={{ padding: '0 16px', background: '#1565C0', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 12, borderRadius: 4 }}
-            >
-              Sử dụng
-            </button>
-          </div>
-          {couponApplied && (
-            <p style={{ fontSize: 12, color: '#2e7d32', marginBottom: 12 }}>✓ Mã giảm giá đã được áp dụng (-10%)</p>
-          )}
-
           {/* Price breakdown */}
-          <div style={{ borderTop: '1px solid #eee', paddingTop: 16 }}>
+          <div style={{ borderTop: '1px solid #eee', paddingTop: 16, marginTop: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#555', marginBottom: 8 }}>
               <span>Tạm tính</span>
               <span>{totalPrice.toLocaleString()}đ</span>
             </div>
-            {discount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2e7d32', marginBottom: 8 }}>
-                <span>Giảm giá</span>
-                <span>-{discount.toLocaleString()}đ</span>
-              </div>
-            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#555', marginBottom: 16 }}>
               <span>Phí vận chuyển</span>
               <span style={{ color: shipping === 0 ? '#2e7d32' : '#000' }}>
-                {shipping === 0 ? 'Miễn phí' : `${shipping.toLocaleString()}đ`}
+                {shipping === 0 ? 'Miễn phí' : shipping.toLocaleString() + 'đ'}
               </span>
             </div>
             {shipping > 0 && (
-              <p style={{ fontSize: 11, color: '#888', marginBottom: 16 }}>
-                Miễn phí vận chuyển cho đơn từ 500.000đ
-              </p>
+              <p style={{ fontSize: 11, color: '#888', marginBottom: 12 }}>Miễn phí vận chuyển cho đơn từ 500.000đ</p>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #111', paddingTop: 14 }}>
               <span style={{ fontSize: 15, fontWeight: 700 }}>Tổng cộng</span>

@@ -37,7 +37,7 @@ const productExtras = {
   },
 };
 
-const ProductDetail = ({ productId, navigate, onAddToCart }) => {
+const ProductDetail = ({ productId, navigate, onAddToCart, onToggleWishlist, isWishlisted }) => {
   const product = allProducts.find((p) => String(p.id) === String(productId));
   const extras = productExtras.default;
 
@@ -267,6 +267,19 @@ const ProductDetail = ({ productId, navigate, onAddToCart }) => {
                 }}
               >
                 MUA NGAY
+              </button>
+              {/* Nút tim yêu thích */}
+              <button
+                onClick={() => onToggleWishlist && onToggleWishlist(product)}
+                title={isWishlisted && isWishlisted(product.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+                style={{
+                  width: 52, flexShrink: 0, border: '1.5px solid #ddd', background: '#fff',
+                  cursor: 'pointer', fontSize: 22, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', transition: 'border-color .2s',
+                  color: isWishlisted && isWishlisted(product.id) ? '#e53935' : '#ccc',
+                }}
+              >
+                {isWishlisted && isWishlisted(product.id) ? '❤️' : '🤍'}
               </button>
             </div>
 

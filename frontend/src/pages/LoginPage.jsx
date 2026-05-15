@@ -15,11 +15,8 @@ const LoginPage = ({ navigate, onLogin }) => {
     if (!loginForm.email.trim()) e.email = 'Vui lòng nhập email';
     if (!loginForm.password) e.password = 'Vui lòng nhập mật khẩu';
     if (Object.keys(e).length) { setErrors(e); return; }
-    // Giả lập đăng nhập thành công
+    // Giả lập đăng nhập thành công — App.jsx sẽ xử lý điều hướng
     onLogin({ name: loginForm.email.split('@')[0], email: loginForm.email });
-    // Nếu có trang cần quay lại (referrer), quay lại đó, không thì về account
-    const ref = new URLSearchParams(window.location.search).get('ref');
-    navigate(ref || '/account');
   };
 
   const handleRegister = () => {
@@ -30,8 +27,6 @@ const LoginPage = ({ navigate, onLogin }) => {
     if (regForm.password !== regForm.confirm) e.rconfirm = 'Mật khẩu không khớp';
     if (Object.keys(e).length) { setErrors(e); return; }
     onLogin({ name: regForm.name, email: regForm.email });
-    const ref = new URLSearchParams(window.location.search).get('ref');
-    navigate(ref || '/account');
   };
 
   const inp = (err) => ({

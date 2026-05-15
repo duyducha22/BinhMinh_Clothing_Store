@@ -11,6 +11,7 @@ import AccountPage from "./pages/AccountPage";
 import EditProfilePage from "./pages/EditProfilePage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import OrdersPage from "./pages/OrdersPage";
+import WishlistPage from "./pages/WishlistPage";
 
 function useRouter() {
   const getState = () => ({ path: window.location.pathname, search: window.location.search });
@@ -33,72 +34,79 @@ function App() {
 
   // ——— USER AUTH ———
   const [user, setUser] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [pendingWishlist, setPendingWishlist] = useState(null);
 
-  // Lưu data riêng cho từng tài khoản: { [email]: { cart, orders } }
+  // Lưu data riêng mỗi tài khoản: { [email]: { cart, orders, wishlist } }
   const userDataStore = useRef({});
 
-  // Lưu cart/orders của user hiện tại vào store trước khi đổi user
-  const saveCurrentUserData = (currentUser, currentCart, currentOrders) => {
-    if (currentUser) {
-      userDataStore.current[currentUser.email] = {
-        cart: currentCart,
-        orders: currentOrders,
-      };
-    }
-  };
-
-  // ——— CART & ORDERS ———
-  const [cartItems, setCartItems] = useState([]);
-  const [orders, setOrders] = useState([]);
+  // ——— STATE ———
+  const [cartItems, setCartItems]   = useState([]);
+  const [orders, setOrders]         = useState([]);
+  const [wishlist, setWishlist]     = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Redirect sang login nếu chưa đăng nhập khi cần mua hàng
-  const [pendingAction, setPendingAction] = useState(null);
-
+  // ——— AUTH HANDLERS ———
   const handleLogin = (u) => {
-    // Load data của user vừa đăng nhập
-    const saved = userDataStore.current[u.email] || { cart: [], orders: [] };
+    const saved = userDataStore.current[u.email] || { cart: [], orders: [], wishlist: [] };
     setUser(u);
     setCartItems(saved.cart);
     setOrders(saved.orders);
-    // Nếu có pending action (thêm vào giỏ trước khi đăng nhập) thì thực hiện
+    setWishlist(saved.wishlist || []);
+
+    if (pendingWishlist) {
+      const { product, returnPath } = pendingWishlist;
+      setWishlist(prev => {
+        const exists = prev.find(p => p.id === product.id);
+        const updated = exists ? prev : [...prev, product];
+        userDataStore.current[u.email] = { cart: saved.cart, orders: saved.orders, wishlist: updated };
+        return updated;
+      });
+      setPendingWishlist(null);
+      navigate(returnPath || '/');
+      return;
+    }
+
     if (pendingAction) {
-      const { product, size, color, qty, openCart } = pendingAction;
+      const { product, size, color, qty, openCart, returnPath } = pendingAction;
       const key = product.id + '-' + size + '-' + color;
       setCartItems(prev => {
-        const existing = prev.find(i => i.key === key);
-        if (existing) return prev.map(i => i.key === key ? { ...i, qty: i.qty + qty } : i);
+        const ex = prev.find(i => i.key === key);
+        if (ex) return prev.map(i => i.key === key ? { ...i, qty: i.qty + qty } : i);
         return [...prev, { key, product, size, color, qty }];
       });
-      if (openCart) setIsCartOpen(true);
       setPendingAction(null);
+      if (!openCart) navigate('/checkout');
+      else { setIsCartOpen(true); navigate(returnPath || '/'); }
+    } else if (window.location.pathname === '/login') {
+      // Đang ở trang login → về trang chủ sau khi đăng nhập
+      navigate('/');
     }
+    // Các trang khác → giữ nguyên
   };
 
   const handleLogout = () => {
-    // Lưu data trước khi logout
-    saveCurrentUserData(user, cartItems, orders);
-    setUser(null);
-    setCartItems([]);
-    setOrders([]);
+    if (user) {
+      userDataStore.current[user.email] = { cart: cartItems, orders, wishlist };
+    }
+    setUser(null); setCartItems([]); setOrders([]); setWishlist([]);
     setIsCartOpen(false);
     navigate('/');
   };
 
   const handleUpdateUser = (u) => setUser(u);
 
-  // Thêm vào giỏ — yêu cầu đăng nhập
+  // ——— CART ———
   const addToCart = (product, size, color, qty, openCart = true) => {
     if (!user) {
-      // Lưu action lại, chuyển sang trang login
-      setPendingAction({ product, size, color, qty, openCart });
+      setPendingAction({ product, size, color, qty, openCart, returnPath: window.location.pathname });
       navigate('/login');
       return;
     }
     setCartItems(prev => {
       const key = product.id + '-' + size + '-' + color;
-      const existing = prev.find(i => i.key === key);
-      if (existing) return prev.map(i => i.key === key ? { ...i, qty: i.qty + qty } : i);
+      const ex = prev.find(i => i.key === key);
+      if (ex) return prev.map(i => i.key === key ? { ...i, qty: i.qty + qty } : i);
       return [...prev, { key, product, size, color, qty }];
     });
     if (openCart) setIsCartOpen(true);
@@ -110,10 +118,11 @@ function App() {
   );
   const clearCart = () => setCartItems([]);
 
+  // ——— ORDERS ———
   const addOrder = (orderData) => {
     setOrders(prev => {
       const updated = [orderData, ...prev];
-      if (user) userDataStore.current[user.email] = { cart: [], orders: updated };
+      if (user) userDataStore.current[user.email] = { cart: [], orders: updated, wishlist };
       return updated;
     });
   };
@@ -121,17 +130,34 @@ function App() {
   const cancelOrder = (orderId) => {
     setOrders(prev => {
       const updated = prev.map(o => o.id === orderId ? { ...o, status: 'Đã hủy' } : o);
-      if (user) userDataStore.current[user.email] = { cart: cartItems, orders: updated };
+      if (user) userDataStore.current[user.email] = { cart: cartItems, orders: updated, wishlist };
       return updated;
     });
   };
 
+  // ——— WISHLIST ———
+  const toggleWishlist = (product) => {
+    if (!user) {
+      setPendingWishlist({ product, returnPath: window.location.pathname });
+      navigate('/login');
+      return;
+    }
+    setWishlist(prev => {
+      const exists = prev.find(p => p.id === product.id);
+      const updated = exists ? prev.filter(p => p.id !== product.id) : [...prev, product];
+      userDataStore.current[user.email] = { cart: cartItems, orders, wishlist: updated };
+      return updated;
+    });
+  };
+
+  const isWishlisted = (productId) => wishlist.some(p => p.id === productId);
+
+  // ——— TOTALS ———
   const totalItems = cartItems.reduce((s, i) => s + i.qty, 0);
   const totalPrice = cartItems.reduce((s, i) =>
     s + parseInt((i.product.price || '0').replace(/,/g, '')) * i.qty, 0
   );
 
-  // Trang checkout yêu cầu đăng nhập
   const requireAuth = (page) => {
     if (!user) { navigate('/login'); return null; }
     return page;
@@ -140,35 +166,29 @@ function App() {
   // ——— ROUTES ———
   const productMatch  = path.match(/^\/product\/(\d+)$/);
   const categoryMatch = path.match(/^\/category\/([^/]+)$/);
-  const isSearch    = path === "/search";
-  const isCheckout  = path === "/checkout";
-  const isLogin     = path === "/login";
-  const isAccount   = path === "/account";
-  const isEditProf  = path === "/account/edit";
-  const isChangePw  = path === "/account/change-password";
-  const isOrders    = path === "/account/orders";
+  const q = new URLSearchParams(search);
 
   const renderPage = () => {
-    if (productMatch)  return <ProductDetail productId={productMatch[1]} navigate={navigate} onAddToCart={addToCart} />;
-    if (categoryMatch) {
-      const sub = new URLSearchParams(search).get("sub") || "Tất cả";
-      return <CategoryPage slug={categoryMatch[1]} initialSubCat={sub} navigate={navigate} />;
+    if (productMatch)  return <ProductDetail productId={productMatch[1]} navigate={navigate} onAddToCart={addToCart} onToggleWishlist={toggleWishlist} isWishlisted={isWishlisted} />;
+    if (categoryMatch) return <CategoryPage slug={categoryMatch[1]} initialSubCat={q.get("sub") || "Tất cả"} navigate={navigate} />;
+    switch (path) {
+      case "/search":                return <SearchPage query={q.get("q") || ""} navigate={navigate} />;
+      case "/checkout":              return requireAuth(<CheckoutPage cartItems={cartItems} totalPrice={totalPrice} navigate={navigate} removeFromCart={removeFromCart} updateQty={updateQty} clearCart={clearCart} addOrder={addOrder} />);
+      case "/login":                 return <LoginPage navigate={navigate} onLogin={handleLogin} />;
+      case "/account":               return requireAuth(<AccountPage user={user} onLogout={handleLogout} navigate={navigate} />);
+      case "/account/edit":          return requireAuth(<EditProfilePage user={user} onUpdateUser={handleUpdateUser} navigate={navigate} />);
+      case "/account/change-password": return requireAuth(<ChangePasswordPage navigate={navigate} />);
+      case "/account/orders":        return requireAuth(<OrdersPage navigate={navigate} orders={orders} cancelOrder={cancelOrder} />);
+      case "/account/wishlist":      return requireAuth(<WishlistPage navigate={navigate} wishlist={wishlist} onToggleWishlist={toggleWishlist} onAddToCart={addToCart} />);
+      default:                       return <Home navigate={navigate} onAddToCart={addToCart} />;
     }
-    if (isSearch)   return <SearchPage query={new URLSearchParams(search).get("q") || ""} navigate={navigate} />;
-    if (isCheckout) return requireAuth(<CheckoutPage cartItems={cartItems} totalPrice={totalPrice} navigate={navigate} removeFromCart={removeFromCart} updateQty={updateQty} clearCart={clearCart} addOrder={addOrder} />);
-    if (isLogin)    return <LoginPage navigate={navigate} onLogin={handleLogin} />;
-    if (isAccount)  return requireAuth(<AccountPage user={user} onLogout={handleLogout} navigate={navigate} />);
-    if (isEditProf) return requireAuth(<EditProfilePage user={user} onUpdateUser={handleUpdateUser} navigate={navigate} />);
-    if (isChangePw) return requireAuth(<ChangePasswordPage navigate={navigate} />);
-    if (isOrders)   return requireAuth(<OrdersPage navigate={navigate} orders={orders} cancelOrder={cancelOrder} />);
-    return <Home navigate={navigate} onAddToCart={addToCart} />;
   };
 
   return (
     <div style={{ paddingTop: "100px", backgroundColor: "#fff" }}>
       <Header
         navigate={navigate}
-        currentQuery={isSearch ? new URLSearchParams(search).get("q") || "" : ""}
+        currentQuery={path === "/search" ? q.get("q") || "" : ""}
         cartItems={cartItems} totalItems={totalItems} totalPrice={totalPrice}
         isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen}
         removeFromCart={removeFromCart} updateQty={updateQty}
